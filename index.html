@@ -1,12 +1,259 @@
+
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>Fluxio — Build Anything. Just Talk.</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fluxio — Build Anything. Just Talk.</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#060614;color:#fff;font-family:'Segoe UI',system-ui,sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+nav{height:52px;background:rgba(10,10,26,0.95);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0}
+.logo{font-family:Georgia,serif;font-weight:700;font-size:20px;background:linear-gradient(90deg,#00E5FF,#7B2FFF);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.badge{font-size:11px;color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.05);padding:3px 10px;border-radius:100px}
+.main{flex:1;display:flex;overflow:hidden}
+.chat{width:340px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,0.06);background:#0A0A1A}
+.messages{flex:1;overflow-y:auto;padding:16px}
+.welcome{text-align:center;padding:32px 8px}
+.welcome h2{font-size:18px;font-weight:800;margin-bottom:8px}
+.welcome p{color:rgba(255,255,255,0.4);font-size:13px;line-height:1.7;margin-bottom:20px}
+.suggestion{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;color:rgba(255,255,255,0.6);padding:10px 12px;font-size:12px;cursor:pointer;text-align:left;width:100%;margin-bottom:8px;line-height:1.5;transition:all 0.2s}
+.suggestion:hover{border-color:#7B2FFF;color:#fff}
+.msg-wrap{margin-bottom:14px}
+.msg-wrap.user{display:flex;justify-content:flex-end}
+.msg-wrap.ai{display:flex;flex-direction:column;align-items:flex-start}
+.ai-label{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.ai-icon{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#7B2FFF,#00E5FF);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+.bubble{max-width:90%;padding:10px 14px;font-size:13px;line-height:1.6;color:rgba(255,255,255,0.85)}
+.bubble.user{background:linear-gradient(135deg,rgba(123,47,255,0.4),rgba(123,47,255,0.2));border:1px solid rgba(123,47,255,0.5);border-radius:16px 16px 4px 16px}
+.bubble.ai{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);border-radius:16px 16px 16px 4px}
+.preview-btn{margin-top:6px;background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.3);border-radius:100px;color:#00E5FF;font-size:11px;padding:4px 12px;cursor:pointer;font-weight:600}
+.typing{display:flex;gap:5px;align-items:center;padding:12px;background:rgba(255,255,255,0.04);border-radius:16px;width:fit-content}
+.dot{width:6px;height:6px;border-radius:50%;background:#00E5FF;animation:bounce 1.2s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:0.2s}
+.dot:nth-child(3){animation-delay:0.4s}
+.typing-text{font-size:12px;color:rgba(255,255,255,0.4);margin-left:6px}
+.input-area{padding:14px;border-top:1px solid rgba(255,255,255,0.06)}
+.input-box{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;display:flex;gap:8px;padding:10px 12px;align-items:flex-end}
+textarea{flex:1;background:transparent;border:none;color:#fff;font-size:13px;resize:none;outline:none;line-height:1.6;font-family:inherit;max-height:100px}
+textarea::placeholder{color:rgba(255,255,255,0.25)}
+.send-btn{background:linear-gradient(135deg,#7B2FFF,#00E5FF);border:none;border-radius:10px;color:#fff;width:36px;height:36px;font-size:16px;cursor:pointer;flex-shrink:0}
+.send-btn:disabled{background:rgba(255,255,255,0.08);cursor:default}
+.preview-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.preview-tabs{height:44px;background:rgba(10,10,26,0.8);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;padding:0 14px;gap:4px}
+.tab-btn{background:transparent;border:1px solid transparent;border-radius:8px;color:rgba(255,255,255,0.4);padding:4px 14px;font-size:12px;cursor:pointer}
+.tab-btn.active{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.1);color:#fff;font-weight:600}
+.tab-desc{font-size:12px;color:rgba(255,255,255,0.3);margin-left:8px}
+iframe{width:100%;height:100%;border:none}
+.code-view{height:100%;overflow-y:auto;padding:20px}
+pre{color:rgba(255,255,255,0.7);font-size:11px;line-height:1.7;white-space:pre-wrap;font-family:monospace}
+.empty-preview{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;position:relative}
+.empty-preview .emoji{font-size:56px;margin-bottom:16px;opacity:0.3}
+.empty-preview h3{font-size:18px;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:10px}
+.empty-preview p{color:rgba(255,255,255,0.2);font-size:13px;max-width:280px;line-height:1.7}
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(123,47,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(123,47,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+.nav-btns{display:flex;gap:8px;align-items:center}
+.copy-btn{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.7);padding:5px 10px;font-size:11px;cursor:pointer}
+.dl-btn{background:linear-gradient(135deg,#7B2FFF,#00E5FF);border:none;border-radius:8px;color:#fff;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer}
+@keyframes bounce{0%,80%,100%{transform:scale(0.8);opacity:0.4}40%{transform:scale(1.2);opacity:1}}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:rgba(123,47,255,0.5);border-radius:2px}
+@media(max-width:600px){.chat{width:100%}.preview-area{display:none}.chat.hidden{display:none}.preview-area.show{display:flex}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">⌁ fluxio</div>
+  <div class="nav-btns">
+    <span class="badge">Beta</span>
+    <button class="copy-btn" id="copyBtn" style="display:none">📋 Copy</button>
+    <button class="dl-btn" id="dlBtn" style="display:none">⬇ Download</button>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="chat" id="chatPanel">
+    <div class="messages" id="messages">
+      <div class="welcome" id="welcome">
+        <div style="font-size:32px;margin-bottom:10px">✨</div>
+        <h2>Fluxio Builder</h2>
+        <p>Apna idea batao — website, app, ya agent.<br>Main seconds mein bana deta hoon!</p>
+        <button class="suggestion" onclick="sendMsg('Mujhe ek food delivery app ki landing page chahiye — dark theme')">🍔 Food delivery landing page — dark theme</button>
+        <button class="suggestion" onclick="sendMsg('Ek modern portfolio website banao developer ke liye')">💻 Developer portfolio website</button>
+        <button class="suggestion" onclick="sendMsg('Customer support chatbot UI banao')">🤖 Customer support chatbot UI</button>
+        <button class="suggestion" onclick="sendMsg('Ek simple to-do app banao')">✅ Simple to-do app</button>
+        <button class="suggestion" onclick="sendMsg('E-commerce product page banao sneakers store ke liye')">👟 Sneakers e-commerce page</button>
+      </div>
+    </div>
+    <div class="input-area">
+      <div class="input-box">
+        <textarea id="inputBox" placeholder="Kya banana hai? (Enter to send)" rows="2" onkeydown="handleKey(event)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMsg()" disabled>→</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="preview-area" id="previewArea">
+    <div class="preview-tabs" id="previewTabs" style="display:none">
+      <button class="tab-btn active" id="tabPreview" onclick="switchTab('preview')">👁 Preview</button>
+      <button class="tab-btn" id="tabCode" onclick="switchTab('code')">💻 Code</button>
+      <span class="tab-desc" id="tabDesc"></span>
+    </div>
+    <div id="previewContent" style="flex:1;overflow:hidden;position:relative">
+      <div class="empty-preview">
+        <div class="grid-bg"></div>
+        <div class="emoji">🖥️</div>
+        <h3>Preview yahaan dikhega</h3>
+        <p>Left side mein apna idea type karo — Fluxio seconds mein bana dega</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUGGESTIONS = [];
+let messages = [];
+let currentHTML = '';
+let currentTab = 'preview';
+let isLoading = false;
+
+const input = document.getElementById('inputBox');
+const sendBtn = document.getElementById('sendBtn');
+const messagesDiv = document.getElementById('messages');
+const welcome = document.getElementById('welcome');
+
+input.addEventListener('input', () => {
+  sendBtn.disabled = !input.value.trim() || isLoading;
+});
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+}
+
+async function sendMsg(text) {
+  const msg = text || input.value.trim();
+  if (!msg || isLoading) return;
+  
+  if (welcome) welcome.style.display = 'none';
+  input.value = '';
+  sendBtn.disabled = true;
+  isLoading = true;
+
+  appendMsg('user', msg);
+  messages.push({ role: 'user', content: msg });
+
+  const typingEl = appendTyping();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are Fluxio, an elite AI builder. When a user describes what they want to build, respond with a SHORT one-line description, then on a new line output a complete beautiful HTML file starting with <!DOCTYPE html>. The HTML must include all CSS and JS inline, use dark theme (#060614 background), gradient accents (cyan #00E5FF, violet #7B2FFF), be responsive and visually stunning. No external dependencies except Google Fonts.`,
+        messages: messages
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.map(b => b.text || '').join('') || '';
+    
+    typingEl.remove();
+    
+    const htmlMatch = reply.match(/<!DOCTYPE html[\s\S]*/i);
+    const html = htmlMatch ? htmlMatch[0] : null;
+    const desc = reply.split('\n')[0]?.replace(/<!DOCTYPE.*/i, '').trim() || 'Ready!';
+    
+    messages.push({ role: 'assistant', content: reply });
+    appendMsg('ai', desc, html);
+    
+    if (html) showPreview(html, desc);
+  } catch(e) {
+    typingEl.remove();
+    appendMsg('ai', 'Kuch error aaya — dobara try karo!', null);
+  }
+  
+  isLoading = false;
+  sendBtn.disabled = !input.value.trim();
+}
+
+function appendMsg(role, text, html) {
+  const wrap = document.createElement('div');
+  wrap.className = `msg-wrap ${role}`;
+  
+  if (role === 'ai') {
+    wrap.innerHTML = `
+      <div class="ai-label">
+        <div class="ai-icon">F</div>
+        <span style="font-size:11px;color:rgba(255,255,255,0.3)">Fluxio</span>
+      </div>
+      <div class="bubble ai">${text}</div>
+      ${html ? '<button class="preview-btn" onclick="this.closest(\'.msg-wrap\').querySelector(\'iframe\') || showFromBtn(this)">👁 Preview Dekho</button>' : ''}
+    `;
+    if (html) wrap.dataset.html = html;
+  } else {
+    wrap.innerHTML = `<div class="bubble user">${text}</div>`;
+  }
+  
+  messagesDiv.appendChild(wrap);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+function showFromBtn(btn) {
+  const wrap = btn.closest('.msg-wrap');
+  if (wrap.dataset.html) showPreview(wrap.dataset.html, '');
+}
+
+function appendTyping() {
+  const el = document.createElement('div');
+  el.className = 'msg-wrap ai';
+  el.innerHTML = `
+    <div class="ai-label">
+      <div class="ai-icon">F</div>
+    </div>
+    <div class="typing">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <span class="typing-text">Ban raha hai...</span>
+    </div>`;
+  messagesDiv.appendChild(el);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  return el;
+}
+
+function showPreview(html, desc) {
+  currentHTML = html;
+  document.getElementById('previewTabs').style.display = 'flex';
+  document.getElementById('tabDesc').textContent = desc ? `— ${desc}` : '';
+  document.getElementById('copyBtn').style.display = 'block';
+  document.getElementById('dlBtn').style.display = 'block';
+  switchTab('preview');
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabPreview').className = `tab-btn ${tab==='preview'?'active':''}`;
+  document.getElementById('tabCode').className = `tab-btn ${tab==='code'?'active':''}`;
+  const content = document.getElementById('previewContent');
+  if (tab === 'preview') {
+    content.innerHTML = `<iframe srcdoc="${currentHTML.replace(/"/g,'&quot;')}" sandbox="allow-scripts allow-same-origin"></iframe>`;
+  } else {
+    content.innerHTML = `<div class="code-view"><pre>${currentHTML.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;
+  }
+}
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(currentHTML);
+  document.getElementById('copyBtn').textContent = '✓ Copied!';
+  setTimeout(() => document.getElementById('copyBtn').textContent = '📋 Copy', 2000);
+});
+
+document.getElementById('dlBtn').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([currentHTML], {type:'text/html'}));
+  a.download = 'fluxio-creation.html';
+  a.click();
+});
+</script>
+</body>
 </html>
